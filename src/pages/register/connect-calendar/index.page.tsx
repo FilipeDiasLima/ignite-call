@@ -9,13 +9,16 @@ import { AuthError, ConnectBox, ConnectItem } from "./styles";
 export default function ConnectCalendar() {
   const router = useRouter();
   const session = useSession();
-  console.log("🚀 ~ file: index.page.tsx:12 ~ Register ~ session:", session);
 
   const hasAuthError = !!router.query.error;
   const isSignedIn = session.status === "authenticated";
 
   async function handleConnectCalendar() {
     await signIn("google");
+  }
+
+  async function handleNavigateToNextStep() {
+    await router.push("/register/time-intervals");
   }
 
   return (
@@ -57,7 +60,11 @@ export default function ConnectCalendar() {
           </AuthError>
         )}
 
-        <Button type="submit" disabled={!isSignedIn}>
+        <Button
+          onClick={handleNavigateToNextStep}
+          type="submit"
+          disabled={!isSignedIn}
+        >
           Próximo passo
           <ArrowRight />
         </Button>

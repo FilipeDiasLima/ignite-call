@@ -32,7 +32,6 @@ export default async function handler(
     return res.status(401).end();
   }
 
-  console.log("🚀 ~ file: time-intervals.api.ts:36 ~ req.body:", req.body);
   const { intervals } = timeIntervalsBodySchema.parse(req.body);
 
   await Promise.all(

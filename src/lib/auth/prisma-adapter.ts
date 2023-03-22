@@ -1,17 +1,18 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import { NextApiRequest, NextApiResponse, NextPageContext } from "next";
 import { Adapter } from "next-auth/adapters";
-import { prisma } from "../prisma";
 import { parseCookies, destroyCookie } from "nookies";
+import { prisma } from "../prisma";
+
 export function PrismaAdapter(
-  req: NextApiRequest,
-  res: NextApiResponse
+  req: NextApiRequest | NextPageContext["req"],
+  res: NextApiResponse | NextPageContext["res"]
 ): Adapter {
   return {
     async createUser(user) {
       const { "@ignitecall:userId": userIdOnCookies } = parseCookies({ req });
 
       if (!userIdOnCookies) {
-        throw new Error("User ID not found on cookies");
+        throw new Error("User ID not found on cookies.");
       }
 
       const prismaUser = await prisma.user.update({
@@ -46,7 +47,9 @@ export function PrismaAdapter(
         },
       });
 
-      if (!user) return null;
+      if (!user) {
+        return null;
+      }
 
       return {
         id: user.id,
@@ -57,7 +60,6 @@ export function PrismaAdapter(
         avatar_url: user.avatar_url!,
       };
     },
-
     async getUserByEmail(email) {
       const user = await prisma.user.findUnique({
         where: {
@@ -65,7 +67,9 @@ export function PrismaAdapter(
         },
       });
 
-      if (!user) return null;
+      if (!user) {
+        return null;
+      }
 
       return {
         id: user.id,
@@ -76,7 +80,6 @@ export function PrismaAdapter(
         avatar_url: user.avatar_url!,
       };
     },
-
     async getUserByAccount({ providerAccountId, provider }) {
       const account = await prisma.account.findUnique({
         where: {
@@ -90,7 +93,9 @@ export function PrismaAdapter(
         },
       });
 
-      if (!account) return null;
+      if (!account) {
+        return null;
+      }
 
       const { user } = account;
 
@@ -118,11 +123,11 @@ export function PrismaAdapter(
 
       return {
         id: prismaUser.id,
-        username: prismaUser.username,
         name: prismaUser.name,
+        username: prismaUser.username,
         email: prismaUser.email!,
-        avatar_url: prismaUser.avatar_url!,
         emailVerified: null,
+        avatar_url: prismaUser.avatar_url!,
       };
     },
 
@@ -155,8 +160,8 @@ export function PrismaAdapter(
 
       return {
         userId,
-        expires,
         sessionToken,
+        expires,
       };
     },
 
@@ -170,7 +175,9 @@ export function PrismaAdapter(
         },
       });
 
-      if (!prismaSession) return null;
+      if (!prismaSession) {
+        return null;
+      }
 
       const { user, ...session } = prismaSession;
 

@@ -30,7 +30,7 @@ const timeIntervalsFormSchema = z.object({
   intervals: z
     .array(
       z.object({
-        weekDay: z.number(),
+        weekDay: z.number().min(0).max(6),
         enabled: z.boolean(),
         startTime: z.string(),
         endTime: z.string(),
@@ -39,7 +39,7 @@ const timeIntervalsFormSchema = z.object({
     .length(7)
     .transform((intervals) => intervals.filter((interval) => interval.enabled))
     .refine((intervals) => intervals.length > 0, {
-      message: "Você precisa selecionar pelo menos um dia da semana.",
+      message: "Você precisa selecionar pelo menos um dia da semana",
     })
     .transform((intervals) => {
       return intervals.map((interval) => {
@@ -59,25 +59,22 @@ const timeIntervalsFormSchema = z.object({
       },
       {
         message:
-          "O horário de término deve ser pelo menos 1h a mais do horário de início.",
+          "O horário de término deve ser pelo menos 1h distante do início.",
       }
     ),
 });
 
-type TimneIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>;
+type TimeIntervalsFormInput = z.input<typeof timeIntervalsFormSchema>;
 type TimeIntervalsFormOutput = z.output<typeof timeIntervalsFormSchema>;
 
 export default function TimeIntervals() {
-  const router = useRouter();
-  const session = useSession();
-
   const {
     register,
     handleSubmit,
     control,
     watch,
     formState: { isSubmitting, errors },
-  } = useForm<TimneIntervalsFormInput>({
+  } = useForm<TimeIntervalsFormInput>({
     resolver: zodResolver(timeIntervalsFormSchema),
     defaultValues: {
       intervals: [
@@ -92,6 +89,8 @@ export default function TimeIntervals() {
     },
   });
 
+  const router = useRouter();
+
   const { fields } = useFieldArray({
     name: "intervals",
     control,
@@ -103,7 +102,12 @@ export default function TimeIntervals() {
 
   async function handleSetTimeIntervals(data: any) {
     const { intervals } = data as TimeIntervalsFormOutput;
-    await api.post("users/time-intervals", intervals);
+
+    await api.post("/users/time-intervals", {
+      intervals,
+    });
+
+    await router.push("/register/update-profile");
   }
 
   return (
