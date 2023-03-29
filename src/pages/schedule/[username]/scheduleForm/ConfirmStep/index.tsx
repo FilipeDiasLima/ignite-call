@@ -4,6 +4,9 @@ import { CalendarBlank, Clock } from "phosphor-react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { ConfirmForm, FormActions, FormError, FormHeader } from "./styles";
+import dayjs from "dayjs";
+import { api } from "@/lib/axios";
+import { useRouter } from "next/router";
 
 const confirmFormSchema = z.object({
   name: z
@@ -15,7 +18,15 @@ const confirmFormSchema = z.object({
 
 type ConfirmFormData = z.infer<typeof confirmFormSchema>;
 
-export function ConfirmStep() {
+interface ConfirmStepProps {
+  schedulingDate: Date;
+  onCancelConfimation: () => void;
+}
+
+export function ConfirmStep({
+  schedulingDate,
+  onCancelConfimation,
+}: ConfirmStepProps) {
   const {
     register,
     handleSubmit,
@@ -24,20 +35,33 @@ export function ConfirmStep() {
     resolver: zodResolver(confirmFormSchema),
   });
 
+  const router = useRouter();
+  const username = String(router.query.username);
+
   async function handleConfirmScheduling(data: ConfirmFormData) {
-    console.log(data);
+    const { name, email, observations } = data;
+    await api.post(`/users/${username}/schedule`, {
+      name,
+      email,
+      observations,
+      date: schedulingDate,
+    });
+    onCancelConfimation();
   }
+
+  const describedDate = dayjs(schedulingDate).format("DD[ de ]MMMM[ de ]YYYY");
+  const describedTime = dayjs(schedulingDate).format("HH:mm[h]");
 
   return (
     <ConfirmForm as="form" onSubmit={handleSubmit(handleConfirmScheduling)}>
       <FormHeader>
         <Text>
           <CalendarBlank />
-          22 de Setembro de 2022
+          {describedDate}
         </Text>
         <Text>
           <Clock />
-          18:00
+          {describedTime}
         </Text>
       </FormHeader>
 
@@ -65,7 +89,7 @@ export function ConfirmStep() {
       </label>
 
       <FormActions>
-        <Button type="button" variant="tertiary">
+        <Button onClick={onCancelConfimation} type="button" variant="tertiary">
           Cancelar
         </Button>
         <Button type="submit" disabled={isSubmitting}>
